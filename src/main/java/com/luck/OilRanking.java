@@ -31,7 +31,7 @@ public class OilRanking {
 
     public static void main(String args[]) throws ClassNotFoundException {
         //查询昨日mongodb数据
-        String date = "2017-11-12";
+        String date = "2017-10-11";
         //查询mongodb限制条件：里程大于十小于两千
         int minMeterInt = Integer.parseInt(PropertiesUtil.getProperties("mongodb.minMeterInt"));
         int maxMeterInt = Integer.parseInt(PropertiesUtil.getProperties("mongodb.maxMeterInt"));
@@ -44,6 +44,7 @@ public class OilRanking {
         CarCache carCache = new CarCache();
 
         /////////////从MySQL中读取全量车信息(按条件过滤掉无效数据)，并封装成cache///////////////
+        long loadAllCarStart = System.currentTimeMillis();
         String driver = "com.mysql.jdbc.Driver";
         // URL指向要访问的数据库名game
         String url = PropertiesUtil.getProperties("mysql.url");
@@ -76,7 +77,8 @@ public class OilRanking {
             logger.error("SQLException", e);
             e.printStackTrace();
         }
-        logger.info("-----------get car from mysql size : {}",carCache.getCache().size());
+        long loadAllCarEnd = System.currentTimeMillis();
+        logger.info("-----------get all car from mysql size : {}  ,cost time : {}",carCache.getCache().size(),(loadAllCarEnd - loadAllCarStart));
 
         //创建SparkConf
         SparkConf sc = new SparkConf()
@@ -99,8 +101,10 @@ public class OilRanking {
         //从mongodb中查询日期为date,里程大于10，并且小于两千（meter_gps）的数据
         Document filter = Document.parse("{ $match: {date :'" + date + "',\"data.meter_gps\":{$gte:" + minMeterInt + ",$lte:" + maxMeterInt + "}} }");
         //按照条件查询mongodb返回rdd
+        long sparkLoadBiStart = System.currentTimeMillis();
         JavaMongoRDD<Document> javaMongoRDD = MongoSpark.load(jsc, readConfig).withPipeline(Collections.singletonList(filter));
-        logger.info("-----------get car fuel info from mongodb size :{}",javaMongoRDD.count());
+        long sparkLoadBiEnd = System.currentTimeMillis();
+        logger.info("-----------get car fuel info from mongodb bi table size :{} ,cost time : {}",javaMongoRDD.count(),(sparkLoadBiEnd - sparkLoadBiStart));
 
         //处理从mongodb查询出来的数据
         JavaRDD<CarRankingYesterdayEntity> javaRDD = javaMongoRDD.map(new Function<Document, CarRankingYesterdayEntity>() {
@@ -108,28 +112,41 @@ public class OilRanking {
             public CarRankingYesterdayEntity call(Document document) throws Exception {
                 CarRankingYesterdayEntity carRankingYesterdayEntity = new CarRankingYesterdayEntity();
                 String terminalId = String.valueOf(document.getLong("terminalId"));
-                //通过terminalId获取车辆信息
-                HashMap<String, String> carMap = carCache.getCar(terminalId);
-                String carModel = carMap.get("carModel");
-                String carNumber = carMap.get("carNumber");
-                String id = carMap.get("id");
+                if (null != terminalId){
+                    //通过terminalId获取车辆信息
+                    HashMap<String, String> carMap = carCache.getCar(terminalId);
+                    if (null != carMap){
+                        String carModel = carMap.get("carModel");
+                        String carNumber = carMap.get("carNumber");
+                        String id = carMap.get("id");
 
-                double fuel = Double.parseDouble(String.valueOf(JsonUtil.fromJson(JsonUtil.toJson(document.get("data")), Map.class).get("fuel")));
-                double meterGps = Double.parseDouble(String.valueOf(JsonUtil.fromJson(JsonUtil.toJson(document.get("data")), Map.class).get("meter_gps")));
-                //计算百公里油耗 ： fuel/meter_gps*100
-                double fuelConsumptionPerKM = fuel / meterGps * 100;
+                        double fuel = Double.parseDouble(String.valueOf(JsonUtil.fromJson(JsonUtil.toJson(document.get("data")), Map.class).get("fuel")));
+                        double meterGps = Double.parseDouble(String.valueOf(JsonUtil.fromJson(JsonUtil.toJson(document.get("data")), Map.class).get("meter_gps")));
+                        //计算百公里油耗 ： fuel/meter_gps*100
+                        double fuelConsumptionPerKM = fuel / meterGps * 100;
 
-                carRankingYesterdayEntity.setCar_id(id);
-                carRankingYesterdayEntity.setCar_num(carNumber);
-                carRankingYesterdayEntity.setStatis_date(date);
-                carRankingYesterdayEntity.setMileage(meterGps);
-                carRankingYesterdayEntity.setOilwear(fuel);
-                carRankingYesterdayEntity.setOilwear_avg(fuelConsumptionPerKM);
-                carRankingYesterdayEntity.setCreate_time(DateUtil.format(DateUtil.time_pattern, new Date()));
-                carRankingYesterdayEntity.setStatis_timestamp(DateUtil.strTimeChangeLong(date + " 00:00:00"));
-                carRankingYesterdayEntity.setCar_model(carModel);
-
+                        carRankingYesterdayEntity.setCar_id(id);
+                        carRankingYesterdayEntity.setCar_num(carNumber);
+                        carRankingYesterdayEntity.setStatis_date(date);
+                        carRankingYesterdayEntity.setMileage(meterGps);
+                        carRankingYesterdayEntity.setOilwear(fuel);
+                        carRankingYesterdayEntity.setOilwear_avg(fuelConsumptionPerKM);
+                        carRankingYesterdayEntity.setCreate_time(DateUtil.format(DateUtil.time_pattern, new Date()));
+                        carRankingYesterdayEntity.setStatis_timestamp(DateUtil.strTimeChangeLong(date + " 00:00:00"));
+                        carRankingYesterdayEntity.setCar_model(carModel);
+                    }
+                }
                 return carRankingYesterdayEntity;
+            }
+            //过滤掉 mongodb数据中的terminalId在MySQL的car表中没有对应车辆信息的数据
+        }).filter(new Function<CarRankingYesterdayEntity, Boolean>() {
+            @Override
+            public Boolean call(CarRankingYesterdayEntity carRankingYesterdayEntity) throws Exception {
+                if (null != carRankingYesterdayEntity.getCar_id()) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         });
         //将算完百公里油耗的数据，按照车型（Car_model）进行转换为Tuple2
@@ -171,6 +188,7 @@ public class OilRanking {
         }
 
         //批量插入转换后的数据到mysql
+        long writToMysqlStart = System.currentTimeMillis();
         try {
             Connection conn = DriverManager.getConnection(url, user, password);
             conn.setAutoCommit(false);
@@ -186,16 +204,11 @@ public class OilRanking {
                     "car_model" +
                     ",ranking," +
                     "percentage) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-            PreparedStatement prest = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+//            PreparedStatement prest = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            PreparedStatement prest = conn.prepareStatement(sql);
 
-            ListUtil listUtil = new ListUtil();
-            //把要插入MySQL的List按照一定数量分割，并且批量插入到MySQL中
-            List<List<CarRankingYesterdayEntity>> splitWriteToMysql = listUtil.splitList(writeToMysql, mysqlBatchSize);
-            logger.info("-----------writeToMysql size :{}",writeToMysql.size());
-
-            for (int i = 0; i < splitWriteToMysql.size(); i++) {
-                for (int x = 0; x < splitWriteToMysql.get(i).size(); x++) {
-                    CarRankingYesterdayEntity carRankingYesterdayEntity = splitWriteToMysql.get(i).get(x);
+                for (int x = 0; x < writeToMysql.size(); x++) {
+                    CarRankingYesterdayEntity carRankingYesterdayEntity = writeToMysql.get(x);
                     prest.setString(1, carRankingYesterdayEntity.getCar_id());
                     prest.setString(2, carRankingYesterdayEntity.getCar_num());
                     prest.setString(3, carRankingYesterdayEntity.getStatis_date());
@@ -209,13 +222,40 @@ public class OilRanking {
                     prest.setDouble(11, carRankingYesterdayEntity.getPercentage());
                     prest.addBatch();
                 }
-                prest.executeBatch();
-                conn.commit();
-            }
+
+            prest.executeBatch(); // 执行批量处理
+            conn.commit();  // 提交
             conn.close();
+
+//            ListUtil listUtil = new ListUtil();
+//            //把要插入MySQL的List按照一定数量分割，并且批量插入到MySQL中
+//            List<List<CarRankingYesterdayEntity>> splitWriteToMysql = listUtil.splitList(writeToMysql, mysqlBatchSize);
+//
+//            for (int i = 0; i < splitWriteToMysql.size(); i++) {
+//                for (int x = 0; x < splitWriteToMysql.get(i).size(); x++) {
+//                    CarRankingYesterdayEntity carRankingYesterdayEntity = splitWriteToMysql.get(i).get(x);
+//                    prest.setString(1, carRankingYesterdayEntity.getCar_id());
+//                    prest.setString(2, carRankingYesterdayEntity.getCar_num());
+//                    prest.setString(3, carRankingYesterdayEntity.getStatis_date());
+//                    prest.setDouble(4, carRankingYesterdayEntity.getMileage());
+//                    prest.setDouble(5, carRankingYesterdayEntity.getOilwear());
+//                    prest.setDouble(6, Double.parseDouble(df.format(carRankingYesterdayEntity.getOilwear_avg())));
+//                    prest.setString(7, carRankingYesterdayEntity.getCreate_time());
+//                    prest.setLong(8, carRankingYesterdayEntity.getStatis_timestamp());
+//                    prest.setString(9, carRankingYesterdayEntity.getCar_model());
+//                    prest.setInt(10, carRankingYesterdayEntity.getRanking());
+//                    prest.setDouble(11, carRankingYesterdayEntity.getPercentage());
+//                    prest.addBatch();
+//                }
+//                prest.executeBatch();
+//                conn.commit();
+//            }
+//            conn.close();
         } catch (Exception e) {
             logger.error("mysql insert error");
             e.printStackTrace();
         }
+        long writToMysqlEnd = System.currentTimeMillis();
+        logger.info("-----------writeToMysql size :{} , cost time : {}",writeToMysql.size(),(writToMysqlEnd - writToMysqlStart));
     }
 }
