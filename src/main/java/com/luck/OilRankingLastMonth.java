@@ -4,15 +4,11 @@ import com.luck.entity.CarRankingYesterdayEntity;
 import com.luck.util.*;
 import com.mongodb.spark.rdd.api.java.JavaMongoRDD;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.PairFunction;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Tuple2;
-
 import java.util.*;
 
 /**
