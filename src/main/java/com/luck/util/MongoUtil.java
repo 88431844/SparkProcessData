@@ -160,8 +160,11 @@ public class MongoUtil {
 //        System.out.println(getLastMonthTableName(DateUtil.parseDate("2017-01-01"),date_pattern2,"bi"));
 //        System.out.println(getLastWeekTableName(DateUtil.parseDate("2017-11-06"),date_pattern2,"bi"));
 //        System.out.println(getLastDayCondition(DateUtil.parseDate("2017-11-02"),date_pattern1));
-//        System.out.println(getLastWeekCondition(DateUtil.parseDate("2017-11-06"),date_pattern1));
+//        System.out.println(getLastWeekCondition(DateUtil.parseDate("2017-11-22"),date_pattern1));
 //        System.out.println(MongoUtil.getLastDayTableName(new Date(), MongoUtil.date_pattern2, "bi"));
 //        System.out.println(getLastMonthCondition(new Date(),date_pattern1));
+//        System.out.println(DateUtil.lastDayOfCurrentMonth("2017-10-30"));
+//        System.out.println(DateUtil.firstDayOfCurrentMonth("2017-11-06"));
+        System.out.println(getLastWeekTableName(new Date(),date_pattern2,"bi"));
     }
 }

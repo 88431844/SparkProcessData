@@ -55,8 +55,8 @@ public class MysqlUtil {
                     prest.setString(1, carRankingYesterdayEntity.getCar_id());
                     prest.setString(2, carRankingYesterdayEntity.getCar_num());
                     prest.setString(3, carRankingYesterdayEntity.getStatis_date());
-                    prest.setDouble(4, carRankingYesterdayEntity.getMileage());
-                    prest.setDouble(5, carRankingYesterdayEntity.getOilwear());
+                    prest.setDouble(4, Double.parseDouble(df.format(carRankingYesterdayEntity.getMileage())));
+                    prest.setDouble(5, Double.parseDouble(df.format(carRankingYesterdayEntity.getOilwear())));
                     prest.setDouble(6, Double.parseDouble(df.format(carRankingYesterdayEntity.getOilwear_avg())));
                     prest.setString(7, carRankingYesterdayEntity.getCreate_time());
                     prest.setLong(8, carRankingYesterdayEntity.getStatis_timestamp());
