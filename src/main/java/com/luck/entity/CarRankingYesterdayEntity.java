@@ -15,7 +15,7 @@ public class CarRankingYesterdayEntity implements Serializable {
     private String car_id;
     //车牌号
     private String car_num;
-    //统计日期
+    //统计日期(昨日；周一，月第一天)
     private String statis_date;
     //当天的行程里程
     private double mileage;
@@ -25,7 +25,7 @@ public class CarRankingYesterdayEntity implements Serializable {
     private double oilwear_avg;
     //创建时间
     private String create_time;
-    //统计日期零点时间戳
+    //统计日期零点时间戳(昨日；周一，月第一天)
     private long statis_timestamp;
     //车型ID
     private String car_model;

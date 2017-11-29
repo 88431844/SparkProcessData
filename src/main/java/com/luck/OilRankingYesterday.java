@@ -55,7 +55,11 @@ public class OilRankingYesterday {
         logger.info("OilRankingLastMonth javaMongoRDD size : {}", javaMongoRDD.count());
         //待写入MySQL的昨日车辆油耗排行榜数据
         List<CarRankingYesterdayEntity> writeToMysql = SparkUtil.getListFromRDDYesterday(javaMongoRDD, date);
+        //删除出要插入的数据，防止重复插入
+        MysqlUtil.delRakingData(mysqlTableName, DateUtil.strTimeChangeLong(date + " 00:00:00"));
         //批量插入转换后的数据到mysql
         MysqlUtil.batchInsert(writeToMysql, mysqlTableName);
+        //删除上个月（30天）今天的油量排行数据(时间格式必须用：yyyy-MM-dd HH:mm:ss即time_pattern)
+        MysqlUtil.delRakingData(mysqlTableName,DateUtil.returnSomeDay(date,30,DateUtil.time_pattern));
     }
 }

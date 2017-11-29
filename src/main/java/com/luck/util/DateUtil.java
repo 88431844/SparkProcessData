@@ -58,7 +58,7 @@ public class DateUtil
     {
         // System.out.printf(DateUtil.getNowDate().getTime() + "");
         System.out.println(format(date_st_pattern, getNowDate(date_st_pattern)));
-        
+
     }
     
     public static String formatTime(Date date)
@@ -1212,4 +1212,14 @@ public class DateUtil
         return dateStr;
     }
 
+    /**
+     * currentDay为起始日期格式：yyyy-MM-dd
+     * retrunDay往回退天数
+     * @param currentDay
+     * @param retrunDay
+     * @return
+     */
+    public static Long returnSomeDay(String currentDay,int retrunDay,String dateForm){
+        return DateUtil.strTimeChangeLong(new SimpleDateFormat(dateForm).format(DateUtil.parseDate(currentDay).getTime() - 86400000L*retrunDay));
+    }
 }

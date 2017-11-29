@@ -76,4 +76,27 @@ public class MysqlUtil {
         long writToMysqlEnd = System.currentTimeMillis();
         logger.info("-----------writeToMysql size :{} , cost time : {}",writeToMysql.size(),(writToMysqlEnd - writToMysqlStart));
     }
+
+    /**
+     * 删除对应的油量排行数据
+     * mysqlTableName 是要删除的表名（昨日：car_ranking_yesterday，上周：car_ranking_week，上个月：car_ranking_month）
+     * statisTimestamp 是统计日期当天零点的时间戳十三位（昨日，上周：周一，上个月：月初一号）
+     * @param mysqlTableName
+     * @param statisTimestamp
+     */
+    public static void delRakingData(String mysqlTableName,Long statisTimestamp){
+        try {
+            Connection conn = DriverManager.getConnection(PropertiesUtil.getProperties("mysql.url"), PropertiesUtil.getProperties("mysql.username"), PropertiesUtil.getProperties("mysql.password"));
+            String sql = "delete from "+mysqlTableName+" where statis_timestamp = ?";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
+            //为占位符赋值
+            pstmt.setLong(1, statisTimestamp);
+            pstmt.executeUpdate();
+        }catch (Exception e){
+            logger.error("MysqlUtil delRakingData error");
+            e.printStackTrace();
+        }
+
+    }
 }

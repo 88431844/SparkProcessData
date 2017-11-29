@@ -165,6 +165,9 @@ public class MongoUtil {
 //        System.out.println(getLastMonthCondition(new Date(),date_pattern1));
 //        System.out.println(DateUtil.lastDayOfCurrentMonth("2017-10-30"));
 //        System.out.println(DateUtil.firstDayOfCurrentMonth("2017-11-06"));
-        System.out.println(getLastWeekTableName(new Date(),date_pattern2,"bi"));
+//        System.out.println(getLastWeekTableName(new Date(),date_pattern2,"bi"));
+//        System.out.println(new SimpleDateFormat(date_pattern1).format(DateUtil.parseDate("2017-12-11").getTime() - 86400000L*70));
+//        System.out.println(new SimpleDateFormat(date_pattern1).format(DateUtil.parseDate("2017-11-07").getTime() - 86400000L*30));
+//        System.out.println(DateUtil.returnSomeDay("2017-11-06",30,"yyyy-MM-dd HH:mm:ss"));
     }
 }

@@ -85,10 +85,13 @@ public class OilRankingLastWeek {
 
         //将查询的mongodb数据，按照车的terminalId分组，并且合并该terminalId车的里程，油耗信息
         JavaRDD<Document> javaRDD = SparkUtil.combineCarInfo(javaMongoRDD, carDataLimit, jsc);
-
+        //删除出要插入的数据，防止重复插入
+        MysqlUtil.delRakingData(mysqlTableName, DateUtil.strTimeChangeLong(beginDate + " 00:00:00"));
         //待写入MySQL的昨日车辆油耗排行榜数据
         List<CarRankingYesterdayEntity> writeToMysql = SparkUtil.getListFromRDDLast(javaRDD, beginDate);
         //批量插入转换后的数据到mysql
         MysqlUtil.batchInsert(writeToMysql, mysqlTableName);
+        //删除十周（70天）前 那一周的油量排行数据(时间格式必须用：yyyy-MM-dd HH:mm:ss即time_pattern)
+        MysqlUtil.delRakingData(mysqlTableName, DateUtil.returnSomeDay(beginDate, 70, DateUtil.time_pattern));
     }
 }
