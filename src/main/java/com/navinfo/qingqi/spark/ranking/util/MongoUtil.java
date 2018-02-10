@@ -1,4 +1,4 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,11 +24,11 @@ public class MongoUtil {
      */
     public static String getLastDayTableName(Date date, String dateForm, String mongoName) {
         //如果时间大于今天设置为当前
-        if (new Date().getTime() <= date.getTime()) {
+        if (System.currentTimeMillis() <= date.getTime()) {
             date = new Date();
         }
         //昨日直接减去一天后取月份
-        return mongoName + "_" + new SimpleDateFormat(dateForm).format(date.getTime() - 86400000L);
+        return mongoName + "_" + new SimpleDateFormat(dateForm).format(date.getTime());
     }
 
     /**
@@ -109,7 +109,7 @@ public class MongoUtil {
         String begin = null;
         String end = null;
         //如果时间大于今天设置为当前
-        if (new Date().getTime() <= date.getTime()) {
+        if (System.currentTimeMillis() <= date.getTime()) {
             date = new Date();
         }
         Calendar cal = Calendar.getInstance();
@@ -142,7 +142,7 @@ public class MongoUtil {
      */
     private static String getLastWeek(Date date, int week, String dateFrom) {
         //如果时间大于今天设置为当前
-        if (new Date().getTime() <= date.getTime()) {
+        if (System.currentTimeMillis() <= date.getTime()) {
             date = new Date();
         }
         date = new Date(date.getTime() - 86400000L * 7);

@@ -1,4 +1,4 @@
-package com.luck.entity;
+package com.navinfo.qingqi.spark.ranking.bean;
 
 import java.io.Serializable;
 

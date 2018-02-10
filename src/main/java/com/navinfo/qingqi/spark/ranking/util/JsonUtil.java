@@ -1,4 +1,4 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,8 +31,9 @@ public class JsonUtil
 	}
 	private static String toJson(Object obj, ObjectMapper objectMapper) throws JsonProcessingException
 	{
-		if(obj == null)
+		if(obj == null) {
 			return null;
+		}
 		return objectMapper.writeValueAsString(obj);
 	}
 
@@ -56,8 +57,9 @@ public class JsonUtil
 	}
 
 	public static <T> T fromJson(InputStream is, Class<T> clazz){
-		if(is == null)
+		if(is == null) {
 			return null;
+		}
 
 		T t = null;
 		try {
@@ -69,8 +71,9 @@ public class JsonUtil
 	}
 
 	public static <T> T fromJson(byte[] src, Class<T> clazz){
-		if(src == null)
+		if(src == null) {
 			return null;
+		}
 
 		T t = null;
 		try {

@@ -1,4 +1,4 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
 import java.util.ArrayList;
 import java.util.List;

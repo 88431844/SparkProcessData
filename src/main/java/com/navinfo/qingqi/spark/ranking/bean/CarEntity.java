@@ -1,15 +1,33 @@
-package com.luck.entity;
+package com.navinfo.qingqi.spark.ranking.bean;
 
 import java.io.Serializable;
 
+/**
+ * @author admin
+ */
 public class CarEntity implements Serializable {
     private String id;
-    //通信号
+
+    /**
+     * 通信号
+     */
     private String autoTerminal;
-    //车型ID
+
+    /**
+     * 车型ID
+     */
     private String carModel;
-    //车牌号
+
+    /**
+     * 车牌号
+     */
     private String carNumber;
+
+    /**
+     *
+     * 车型名称
+     */
+    private String modelName;
 
     @Override
     public String toString() {
@@ -18,6 +36,7 @@ public class CarEntity implements Serializable {
                 ", autoTerminal='" + autoTerminal + '\'' +
                 ", carModel='" + carModel + '\'' +
                 ", carNumber='" + carNumber + '\'' +
+                ", modelName='" + modelName + '\'' +
                 '}';
     }
 
@@ -51,5 +70,13 @@ public class CarEntity implements Serializable {
 
     public void setCarNumber(String carNumber) {
         this.carNumber = carNumber;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 }

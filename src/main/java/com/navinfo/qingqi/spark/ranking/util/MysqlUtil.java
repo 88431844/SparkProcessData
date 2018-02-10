@@ -1,6 +1,7 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
-import com.luck.entity.CarRankingYesterdayEntity;
+
+import com.navinfo.qingqi.spark.ranking.bean.CarRankingYesterdayEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ public class MysqlUtil {
                     "statis_timestamp," +
                     "car_model" +
                     ",ranking," +
-                    "percentage) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+                    "percentage,model_name) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement prest = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
             ListUtil listUtil = new ListUtil();
@@ -63,18 +64,21 @@ public class MysqlUtil {
                     prest.setString(9, carRankingYesterdayEntity.getCar_model());
                     prest.setInt(10, carRankingYesterdayEntity.getRanking());
                     prest.setDouble(11, carRankingYesterdayEntity.getPercentage());
+                    prest.setString(12, carRankingYesterdayEntity.getModel_name());
                     prest.addBatch();
                 }
                 prest.executeBatch();
                 conn.commit();
             }
+            long writToMysqlEnd = System.currentTimeMillis();
+            logger.info("-----------writeToMysql size :{} , cost time : {}",writeToMysql.size(),(writToMysqlEnd - writToMysqlStart));
+            prest.close();
             conn.close();
         } catch (Exception e) {
             logger.error("mysql insert error");
             e.printStackTrace();
         }
-        long writToMysqlEnd = System.currentTimeMillis();
-        logger.info("-----------writeToMysql size :{} , cost time : {}",writeToMysql.size(),(writToMysqlEnd - writToMysqlStart));
+
     }
 
     /**
@@ -89,10 +93,12 @@ public class MysqlUtil {
             Connection conn = DriverManager.getConnection(PropertiesUtil.getProperties("mysql.url"), PropertiesUtil.getProperties("mysql.username"), PropertiesUtil.getProperties("mysql.password"));
             String sql = "delete from "+mysqlTableName+" where statis_timestamp = ?";
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt = conn.prepareStatement(sql);
+            //pstmt = conn.prepareStatement(sql);
             //为占位符赋值
             pstmt.setLong(1, statisTimestamp);
             pstmt.executeUpdate();
+            pstmt.close();
+            conn.close();
         }catch (Exception e){
             logger.error("MysqlUtil delRakingData error");
             e.printStackTrace();

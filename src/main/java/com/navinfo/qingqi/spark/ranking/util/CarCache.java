@@ -1,15 +1,20 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
-import com.luck.entity.CarEntity;
+
+import com.navinfo.qingqi.spark.ranking.bean.CarEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.Serializable;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.HashMap;
 
 
 /**
- * @Author miracle
+ * @author miracle
  * @Date 2017/11/21 0021 16:50
  */
 public class CarCache implements Serializable {
@@ -26,11 +31,12 @@ public class CarCache implements Serializable {
      * @param carEntity
      */
     public void addCar(CarEntity carEntity) {
-        HashMap<String,String> carMap = new HashMap<>();
+        HashMap<String,String> carMap = new HashMap<>(4);
         carMap.put("id",carEntity.getId());
         carMap.put("autoTerminal",carEntity.getAutoTerminal());
         carMap.put("carModel",carEntity.getCarModel());
         carMap.put("carNumber",carEntity.getCarNumber());
+        carMap.put("modelName",carEntity.getModelName());
         cache.put(carEntity.getAutoTerminal(),carMap);
     }
 
@@ -71,27 +77,49 @@ public class CarCache implements Serializable {
                     Connection conn = DriverManager.getConnection(url, user, password);
                     Statement statement = conn.createStatement();
                     //查询所有车信息，排除carModel为null的数据
-                    ResultSet rs = statement.executeQuery("SELECT id, auto_terminal as autoTerminal,car_model as carModel,car_number as carNumber FROM car WHERE car_model is not null")
+                    ResultSet rs = statement.executeQuery("SELECT\n" +
+                            "id,\n" +
+                            "auto_terminal AS autoTerminal,\n" +
+                            "CONCAT(\n" +
+                            "car_series_name,\n" +
+                            "car_model_name,\n" +
+                            "`engine`\n" +
+                            ") AS modelName,\n" +
+                            "car_model AS carModel,\n"+
+                            "car_number AS carNumber\n" +
+                            "FROM\n" +
+                            "car\n" +
+                            "WHERE\n" +
+                            "car_number IS NOT NULL\n" +
+                            "AND car_number != ''\n" +
+                            "AND car_series_name IS NOT NULL\n" +
+                            "AND car_model_name IS NOT NULL\n" +
+                            "AND `engine` IS NOT NULL AND  auto_terminal is not null")
             ) {
                 while (rs.next()) {
                     String id = rs.getString("id");
                     String autoTerminal = rs.getString("autoTerminal");
                     String carModel = rs.getString("carModel");
                     String carNumber = rs.getString("carNumber");
+                    String modelName = rs.getString("modelName");
                     CarEntity carEntity = new CarEntity();
                     carEntity.setAutoTerminal(autoTerminal);
                     carEntity.setCarModel(carModel);
                     carEntity.setCarNumber(carNumber);
                     carEntity.setId(id);
+                    carEntity.setModelName(modelName);
                     carCache.addCar(carEntity);
                 }
+                rs.close();
+                conn.close();
             }
+
         } catch (Exception e) {
             logger.error("Exception", e);
             e.printStackTrace();
         }
         long loadAllCarEnd = System.currentTimeMillis();
-        logger.info("-----------get all car from mysql size : {}  ,cost time : {}",carCache.getCache().size(),(loadAllCarEnd - loadAllCarStart));
+        logger.info("-----------get all car from mysql size : {}  ,cost time : {}",getCache().size(),(loadAllCarEnd - loadAllCarStart));
         return cache;
     }
 

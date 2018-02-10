@@ -1,10 +1,9 @@
-package com.luck.entity;
+package com.navinfo.qingqi.spark.ranking.bean;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
- * @Author miracle
+ * @author miracle
  * @Date 2017/11/21 0021 16:21
  */
 public class CarRankingYesterdayEntity implements Serializable {
@@ -34,21 +33,29 @@ public class CarRankingYesterdayEntity implements Serializable {
     //超过的百分比
     private double percentage;
 
+    //车型名称
+    private String model_name;
+
+    //统计合格天数
+    private int vilidday;
+
     @Override
     public String toString() {
         return "CarRankingYesterdayEntity{" +
                 "id=" + id +
                 ", car_id='" + car_id + '\'' +
                 ", car_num='" + car_num + '\'' +
-                ", statis_date=" + statis_date +
+                ", statis_date='" + statis_date + '\'' +
                 ", mileage=" + mileage +
                 ", oilwear=" + oilwear +
                 ", oilwear_avg=" + oilwear_avg +
-                ", create_time=" + create_time +
+                ", create_time='" + create_time + '\'' +
                 ", statis_timestamp=" + statis_timestamp +
                 ", car_model='" + car_model + '\'' +
                 ", ranking=" + ranking +
                 ", percentage=" + percentage +
+                ", model_name='" + model_name + '\'' +
+                ", vilidday=" + vilidday +
                 '}';
     }
 
@@ -146,5 +153,21 @@ public class CarRankingYesterdayEntity implements Serializable {
 
     public void setPercentage(double percentage) {
         this.percentage = percentage;
+    }
+
+    public String getModel_name() {
+        return model_name;
+    }
+
+    public void setModel_name(String model_name) {
+        this.model_name = model_name;
+    }
+
+    public int getVilidday() {
+        return vilidday;
+    }
+
+    public void setVilidday(int vilidday) {
+        this.vilidday = vilidday;
     }
 }

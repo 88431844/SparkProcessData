@@ -1,21 +1,25 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+
 /**
  * Created by yangmg on 2016/3/7.
  */
-public class PropertiesUtil {
+public class PropertiesUtil implements Serializable {
     private static final Properties properties = new Properties();
-    private static Logger logger = Logger.getLogger(PropertiesUtil.class);
+    private static Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
     private static InputStream inputStream = null;
     private static final String FILE_NAME = "config.properties";
     private static Map<String,String> allParam = new HashMap<String, String>();
@@ -27,13 +31,13 @@ public class PropertiesUtil {
 
         } catch (IOException e) {
             logger.error("init"+FILE_NAME+"error",e);
-            logger.error(e);
+            logger.error(e.getMessage());
         } finally {
             try {
                 inputStream.close();
             } catch (IOException e) {
                 logger.error("init error"+FILE_NAME+"close stream fail",e);
-                logger.error(e);
+                logger.error(e.getMessage());
             }
         }
         return properties;
@@ -87,6 +91,9 @@ public class PropertiesUtil {
     }
 
     public static String getProperties(String key){
-        return getPropertiesByKey(FILE_NAME, key);
+        //String path = PropertiesUtil.class.getClassLoader().getResource(FILE_NAME).getPath();
+        String value = getPropertiesByKey(FILE_NAME, key);
+        //logger.info("配置在此"+FILE_NAME+"---"+value+" 路径："+path);
+        return value;
     }
 }

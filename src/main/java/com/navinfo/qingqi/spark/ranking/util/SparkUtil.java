@@ -1,9 +1,10 @@
-package com.luck.util;
+package com.navinfo.qingqi.spark.ranking.util;
 
-import com.luck.entity.CarRankingYesterdayEntity;
+
 import com.mongodb.spark.MongoSpark;
 import com.mongodb.spark.config.ReadConfig;
 import com.mongodb.spark.rdd.api.java.JavaMongoRDD;
+import com.navinfo.qingqi.spark.ranking.bean.CarRankingYesterdayEntity;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -14,13 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
- * @Author miracle
+ * @author miracle
  * @Date 2017/11/28 0028 14:16
  */
-public class SparkUtil {
+public class SparkUtil implements Serializable {
     private static Logger logger = LoggerFactory.getLogger(SparkUtil.class);
 
     /**
@@ -60,10 +62,10 @@ public class SparkUtil {
                         double fuel = 0D;
                         double meterGps = 0D;
                         //判断是什么类型油耗排行计算：1是昨日油耗排行；2是上个月油耗排行；3是上周油耗排行
-                        if (type.equals("1")) {
+                        if ("1".equals(type)) {
                             fuel = Double.parseDouble(String.valueOf(JsonUtil.fromJson(JsonUtil.toJson(document.get("data")), Map.class).get("fuel")));
                             meterGps = Double.parseDouble(String.valueOf(JsonUtil.fromJson(JsonUtil.toJson(document.get("data")), Map.class).get("meter_gps")));
-                        } else if (type.equals("2")) {
+                        } else if ("2".equals(type)) {
                             fuel = document.getDouble("fuel");
                             meterGps = document.getDouble("meter_gps");
                         }
@@ -177,7 +179,6 @@ public class SparkUtil {
         long sparkLoadBiStart = System.currentTimeMillis();
         JavaMongoRDD<Document> javaMongoRDD = MongoSpark.load(jsc, readConfig).withPipeline(Collections.singletonList(filter));
         long sparkLoadBiEnd = System.currentTimeMillis();
-        logger.info("-----------get car fuel info from mongodb bi table size :{} ,cost time : {}", javaMongoRDD.count(), (sparkLoadBiEnd - sparkLoadBiStart));
 
         return javaMongoRDD;
     }
@@ -289,5 +290,20 @@ public class SparkUtil {
         }
         //将List<Document>转化为JavaRDD<Document结构
         return jsc.parallelize(documentList);
+    }
+
+
+    public static String dealCarNum(String content){
+        if(content == null || content.length()<6){
+            return "*******";
+        }
+        String starStr = "";
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < (content.length() - 3); i++) {
+            stringBuilder.append("*");
+        }
+        starStr = stringBuilder.toString();
+        return content.substring(0, 2) + starStr
+                + content.substring(content.length() - 1, content.length());
     }
 }
